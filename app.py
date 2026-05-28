@@ -103,30 +103,67 @@ def select_counter():
     counter_id = request.form['counter_id']
     return redirect(url_for('officer_portal', counter_id=counter_id))
 
-# 📢 Action Route: Advance Queue Sequence / Call Next Token
+from twilio.rest import Client  # Add this import at the very top of your app.py file
+
+# Twilio API Credentials (Use sandbox placeholders for local testing)
+TWILIO_ACCOUNT_SID = "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+TWILIO_AUTH_TOKEN = "your_auth_token_here"
+TWILIO_PHONE_NUMBER = "+1234567890"  # Your assigned Twilio trial number
+
 @app.route('/call-next', methods=['POST'])
 def call_next():
     counter_id = int(request.form['counter_id'])
     connection = get_db_connection()
+    sms_sent = False
+    alert_phone = None
+    alert_token = None
+    
     try:
         with connection.cursor() as cursor:
-            # 1. Archive previous token at this counter as Completed
+            # 1. Complete the current token active at this counter
             cursor.execute(
                 "UPDATE tokens SET status = 'Completed' WHERE counter_id = %s AND status = 'Serving'",
                 (counter_id,)
             )
             
-            # 2. Pick the oldest pending token from queue line
-            cursor.execute("SELECT id FROM tokens WHERE status = 'Pending' ORDER BY created_at ASC, id ASC LIMIT 1")
+            # 2. Grab the oldest pending token, its phone number, and service details
+            cursor.execute("""
+                SELECT t.id, t.token_number, t.citizen_phone, s.service_name 
+                FROM tokens t
+                JOIN services s ON t.service_id = s.id
+                WHERE t.status = 'Pending' 
+                ORDER BY t.created_at ASC, t.id ASC LIMIT 1
+            """)
             next_token = cursor.fetchone()
             
-            # 3. Assign next token to this counter location and flip status to Serving
+            # 3. If someone is waiting, assign them to this counter and activate them
             if next_token:
+                token_id = next_token['id']
+                alert_token = next_token['token_number']
+                alert_phone = next_token['citizen_phone']
+                service_name = next_token['service_name']
+                
                 cursor.execute(
                     "UPDATE tokens SET status = 'Serving', counter_id = %s WHERE id = %s",
-                    (counter_id, next_token['id'])
+                    (counter_id, token_id)
                 )
         connection.commit()
+        
+        # 4. Trigger the External SMS Gateway API outside the DB lock
+        if alert_phone and alert_token:
+            try:
+                client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+                message = client.messages.create(
+                    body=f"SewaQueue Alert: Token {alert_token} for {service_name} is now being served at Counter {counter_id}. Please proceed inside immediately.",
+                    from_=TWILIO_PHONE_NUMBER,
+                    to=alert_phone  # Sends directly to the number they typed at the kiosk!
+                )
+                sms_sent = True
+                print(f"📡 API Success: Dispatched SMS alert to {alert_phone}")
+            except Exception as e:
+                # If credentials are placeholders, print it to the console gracefully without crashing the app
+                print(f"⚠️ SMS Gateway Simulation: Text would send to {alert_phone}. Error: {e}")
+
     finally:
         connection.close()
     return redirect(url_for('officer_portal', counter_id=counter_id))
