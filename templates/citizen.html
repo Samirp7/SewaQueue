@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SewaQueue - Get Your Digital Token</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full border border-slate-100">
+        <div class="text-center mb-8">
+            <div class="bg-blue-600 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto text-2xl font-bold shadow-lg mb-3">
+                🇳🇵
+            </div>
+            <h1 class="text-2xl font-bold text-slate-900">SewaQueue Portal</h1>
+            <p class="text-sm text-slate-500 mt-1">Skip the physical lines. Issue your digital department token instantly.</p>
+        </div>
+
+        <form action="/issue-token" method="POST" class="space-y-5">
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">Phone Number</label>
+                <input type="tel" name="phone" required placeholder="98XXXXXXXX" 
+                    class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">Select Department Service</label>
+                <select name="service_id" class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                    <option value="1">Passport Biometrics (Prefix: P)</option>
+                    <option value="2">National ID Verification (Prefix: N)</option>
+                    <option value="3">Document Attestation (Prefix: D)</option>
+                </select>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.99]">
+                Generate Digital Token
+            </button>
+        </form>
+
+        <div class="mt-6 pt-6 border-t border-slate-100 text-center text-xs text-slate-400">
+            Department of Public Services • Kathmandu, Nepal
+        </div>
+    </div>
+
+</body>
+</html>

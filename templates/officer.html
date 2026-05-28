@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SewaQueue - Officer Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen p-6">
+
+    <div class="max-w-5xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div>
+                <h1 class="text-xl font-bold text-slate-900">Officer Portal Console</h1>
+                <p class="text-sm text-slate-500">Manage queue processing streams for your counter location.</p>
+            </div>
+            
+            <form action="/select-counter" method="POST" class="flex gap-2 items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                <label class="text-xs font-bold text-slate-500 uppercase px-2">Active Counter:</label>
+                <select name="counter_id" onchange="this.form.submit()" class="bg-white px-3 py-1.5 border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="1" {% if current_counter == 1 %}selected{% endif %}>Counter 1 (S. Sharma)</option>
+                    <option value="2" {% if current_counter == 2 %}selected{% endif %}>Counter 2 (A. Adhikari)</option>
+                    <option value="3" {% if current_counter == 3 %}selected{% endif %}>Counter 3 (R. Basnet)</option>
+                </select>
+            </form>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between h-72">
+                <div>
+                    <h2 class="text-xs font-bold uppercase text-slate-400 tracking-wider mb-1">Queue Control Actions</h2>
+                    <p class="text-xs text-slate-500 mb-4">Advance the department line sequence instantly.</p>
+                </div>
+                
+                <form action="/call-next" method="POST" class="space-y-3">
+                    <input type="hidden" name="counter_id" value="{{ current_counter }}">
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-4 rounded-xl transition-all shadow-md hover:shadow-lg flex justify-center items-center gap-2 text-lg active:scale-[0.99]">
+                        📢 Call Next Token
+                    </button>
+                </form>
+                
+                <p class="text-[11px] text-slate-400 text-center">Updates public screen layout immediately upon firing.</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:col-span-2">
+                <h2 class="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    📋 Active Waiting Line Pipeline
+                    <span class="bg-blue-100 text-blue-700 text-xs px-2.5 py-0.5 rounded-full font-bold font-mono">{{ pending_tokens|length }} Waiting</span>
+                </h2>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-slate-400 text-xs uppercase font-semibold">
+                                <th class="py-3">Token</th>
+                                <th class="py-3">Service Type</th>
+                                <th class="py-3">Contact Handle</th>
+                                <th class="py-3 text-right">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            {% for token in pending_tokens %}
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="py-3.5 font-mono font-bold text-blue-600">{{ token.token_number }}</td>
+                                <td class="py-3.5 text-slate-600">{{ token.service_name }}</td>
+                                <td class="py-3.5 text-slate-500 font-mono text-xs">{{ token.citizen_phone }}</td>
+                                <td class="py-3.5 text-right"><span class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-md font-medium">Pending</span></td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="py-8 text-center text-slate-400 text-sm italic">No waiting tokens in pipeline. Line empty!</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
